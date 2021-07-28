@@ -33,5 +33,11 @@ namespace osu.Game.Rulesets.Mods
             track.AddAdjustment(AdjustableProperty.Frequency, freqAdjust);
             track.AddAdjustment(AdjustableProperty.Tempo, tempoAdjust);
         }
+
+        public override void RemoveAdjustments(ITrack track)
+        {
+            track.RemoveAdjustment(AdjustableProperty.Frequency, freqAdjust);
+            track.RemoveAdjustment(AdjustableProperty.Tempo, tempoAdjust);
+        }
     }
 }

@@ -18,6 +18,11 @@ namespace osu.Game.Rulesets.Mods
             track.AddAdjustment(AdjustableProperty.Tempo, SpeedChange);
         }
 
+        public virtual void RemoveAdjustments(ITrack track)
+        {
+            track.RemoveAdjustment(AdjustableProperty.Tempo, SpeedChange);
+        }
+
         public virtual void ApplyToSample(DrawableSample sample)
         {
             sample.AddAdjustment(AdjustableProperty.Frequency, SpeedChange);

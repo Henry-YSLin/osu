@@ -919,7 +919,7 @@ namespace osu.Game.Screens.Play
             // Our mods are local copies of the global mods so they need to be re-applied to the track.
             // This is done through the music controller (for now), because resetting speed adjustments on the beatmap track also removes adjustments provided by DrawableTrack.
             // Todo: In the future, player will receive in a track and will probably not have to worry about this...
-            musicController.ResetTrackAdjustments();
+            musicController.RemoveTrackAdjustments();
             foreach (var mod in Mods.Value.OfType<IApplicableToTrack>())
                 mod.ApplyToTrack(musicController.CurrentTrack);
 
@@ -970,7 +970,9 @@ namespace osu.Game.Screens.Play
             // as we are no longer the current screen, we cannot guarantee the track is still usable.
             (GameplayClockContainer as MasterGameplayClockContainer)?.StopUsingBeatmapClock();
 
-            musicController.ResetTrackAdjustments();
+            foreach (var mod in Mods.Value.OfType<IApplicableToTrack>())
+                mod.RemoveAdjustments(musicController.CurrentTrack);
+            musicController.ApplyTrackAdjustments();
 
             fadeOut();
             return base.OnExiting(next);

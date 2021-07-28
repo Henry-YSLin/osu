@@ -61,6 +61,12 @@ namespace osu.Game.Rulesets.Mods
             AdjustPitch.TriggerChange();
         }
 
+        public void RemoveAdjustments(ITrack track)
+        {
+            track.RemoveAdjustment(AdjustableProperty.Frequency, SpeedChange);
+            track.RemoveAdjustment(AdjustableProperty.Tempo, SpeedChange);
+        }
+
         public void ApplyToSample(DrawableSample sample)
         {
             sample.AddAdjustment(AdjustableProperty.Frequency, SpeedChange);

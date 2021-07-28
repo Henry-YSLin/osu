@@ -48,6 +48,12 @@ namespace osu.Game.Rulesets.Mods
             track.AddAdjustment(AdjustableProperty.Tempo, tempoAdjust);
         }
 
+        public override void RemoveAdjustments(ITrack track)
+        {
+            track.RemoveAdjustment(AdjustableProperty.Frequency, freqAdjust);
+            track.RemoveAdjustment(AdjustableProperty.Tempo, tempoAdjust);
+        }
+
         public void ApplyToDrawableRuleset(DrawableRuleset<TObject> drawableRuleset)
         {
             drawableRuleset.Overlays.Add(new NightcoreBeatContainer());

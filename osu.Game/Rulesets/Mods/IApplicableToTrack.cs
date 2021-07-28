@@ -11,5 +11,10 @@ namespace osu.Game.Rulesets.Mods
     public interface IApplicableToTrack : IApplicableMod
     {
         void ApplyToTrack(ITrack track);
+
+        /// <summary>
+        /// Revert all adjustments done to the track.
+        /// </summary>
+        void RemoveAdjustments(ITrack track);
     }
 }

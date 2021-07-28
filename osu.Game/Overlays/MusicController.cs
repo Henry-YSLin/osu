@@ -12,8 +12,8 @@ using osu.Framework.Bindables;
 using osu.Framework.Graphics;
 using osu.Framework.Graphics.Audio;
 using osu.Framework.Graphics.Containers;
-using osu.Framework.Utils;
 using osu.Framework.Threading;
+using osu.Framework.Utils;
 using osu.Game.Beatmaps;
 using osu.Game.Rulesets.Mods;
 
@@ -81,7 +81,12 @@ namespace osu.Game.Overlays
             // Todo: These binds really shouldn't be here, but are unlikely to cause any issues for now.
             // They are placed here for now since some tests rely on setting the beatmap _and_ their hierarchies inside their load(), which runs before the MusicController's load().
             beatmap.BindValueChanged(beatmapChanged, true);
-            mods.BindValueChanged(_ => ResetTrackAdjustments(), true);
+            mods.BindValueChanged(e =>
+            {
+                foreach (var mod in e.OldValue.OfType<IApplicableToTrack>())
+                    mod.RemoveAdjustments(CurrentTrack);
+                ApplyTrackAdjustments();
+            }, true);
         }
 
         /// <summary>
@@ -350,7 +355,7 @@ namespace osu.Game.Overlays
 
             TrackChanged?.Invoke(current, direction);
 
-            ResetTrackAdjustments();
+            ApplyTrackAdjustments();
 
             queuedDirection = null;
 
@@ -414,25 +419,31 @@ namespace osu.Game.Overlays
                     return;
 
                 allowRateAdjustments = value;
-                ResetTrackAdjustments();
+                if (allowRateAdjustments)
+                    ApplyTrackAdjustments();
+                else
+                    RemoveTrackAdjustments();
             }
         }
 
         /// <summary>
-        /// Resets the speed adjustments currently applied on <see cref="CurrentTrack"/> and applies the mod adjustments if <see cref="AllowRateAdjustments"/> is <c>true</c>.
+        /// Applies the mod adjustments if <see cref="AllowRateAdjustments"/> is <c>true</c>.
         /// </summary>
-        /// <remarks>
-        /// Does not reset speed adjustments applied directly to the beatmap track.
-        /// </remarks>
-        public void ResetTrackAdjustments()
+        public void ApplyTrackAdjustments()
         {
-            CurrentTrack.ResetSpeedAdjustments();
+            if (!allowRateAdjustments) return;
 
-            if (allowRateAdjustments)
-            {
-                foreach (var mod in mods.Value.OfType<IApplicableToTrack>())
-                    mod.ApplyToTrack(CurrentTrack);
-            }
+            foreach (var mod in mods.Value.OfType<IApplicableToTrack>())
+                mod.ApplyToTrack(CurrentTrack);
+        }
+
+        /// <summary>
+        /// Remove all adjustments currently applied on <see cref="CurrentTrack"/> by mods.
+        /// </summary>
+        public void RemoveTrackAdjustments()
+        {
+            foreach (var mod in mods.Value.OfType<IApplicableToTrack>())
+                mod.RemoveAdjustments(CurrentTrack);
         }
     }
 
