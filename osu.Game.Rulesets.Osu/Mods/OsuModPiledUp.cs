@@ -15,6 +15,7 @@ using osu.Game.Rulesets.Osu.Objects;
 using osu.Game.Rulesets.Osu.Objects.Drawables;
 using osu.Game.Rulesets.Osu.Skinning.Default;
 using osu.Game.Rulesets.UI;
+using osuTK;
 
 namespace osu.Game.Rulesets.Osu.Mods
 {
@@ -55,8 +56,7 @@ namespace osu.Game.Rulesets.Osu.Mods
             // Hide approach circle
             if (drawableObject is DrawableHitCircle circle)
             {
-                using (circle.BeginAbsoluteSequence(0))
-                    circle.ApproachCircle.Hide();
+                circle.ApproachCircle.Hide();
             }
 
             // Disable slider snaking
@@ -124,13 +124,7 @@ namespace osu.Game.Rulesets.Osu.Mods
 
             for (int i = batches.Count - 1; i >= 1; i--)
             {
-                var container = new BufferedHitObjectsContainer(batches[i], firstStartTime)
-                {
-                    RelativeSizeAxes = Axes.Both,
-                    Origin = Anchor.Centre,
-                    Anchor = Anchor.Centre,
-                    RedrawOnScale = false
-                };
+                var container = new BufferedHitObjectsContainer(batches[i], firstStartTime);
 
                 adjustmentContainer.Add(container);
             }
@@ -188,6 +182,12 @@ namespace osu.Game.Rulesets.Osu.Mods
             {
                 this.batch = batch;
                 this.firstObjectTime = firstObjectTime;
+
+                RelativeSizeAxes = Axes.Both;
+                Size = new Vector2(1.2f, 1.2f);
+                Origin = Anchor.Centre;
+                Anchor = Anchor.Centre;
+                RedrawOnScale = false;
             }
 
             [BackgroundDependencyLoader]
@@ -198,12 +198,22 @@ namespace osu.Game.Rulesets.Osu.Mods
                 stopwatchClock.Seek(batch.First().StartTime);
                 var clock = new FramedOffsetClock(stopwatchClock, false);
 
+                var container = new Container
+                {
+                    RelativeSizeAxes = Axes.Both,
+                    Size = new Vector2(1 / 1.2f, 1 / 1.2f),
+                    Origin = Anchor.Centre,
+                    Anchor = Anchor.Centre
+                };
+
                 for (int j = batch.Count - 1; j >= 0; j--)
                 {
                     var drawable = createDrawableRepresentation(batch[j]);
                     drawable.Clock = clock;
-                    Add(drawable);
+                    container.Add(drawable);
                 }
+
+                LoadComponentAsync(container, Add);
             }
 
             protected override void LoadComplete()
