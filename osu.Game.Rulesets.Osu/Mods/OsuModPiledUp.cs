@@ -164,10 +164,11 @@ namespace osu.Game.Rulesets.Osu.Mods
             return drawable;
         }
 
+        /// <inheritdoc />
         /// <summary>
         /// Render a batch of hit objects to a framebuffer, so that these objects can be visible without being present.
         /// </summary>
-        private class BufferedHitObjectsContainer : BufferedContainer
+        private sealed class BufferedHitObjectsContainer : BufferedContainer
         {
             private readonly List<OsuHitObject> batch;
             private readonly double firstObjectTime;
@@ -183,6 +184,7 @@ namespace osu.Game.Rulesets.Osu.Mods
                 this.batch = batch;
                 this.firstObjectTime = firstObjectTime;
 
+                Alpha = 0;
                 RelativeSizeAxes = Axes.Both;
                 Size = new Vector2(1.2f, 1.2f);
                 Origin = Anchor.Centre;
@@ -224,6 +226,7 @@ namespace osu.Game.Rulesets.Osu.Mods
                     this.FadeInFromZero(100);
 
                 // Fade out when the corresponding batch of hit objects are displayed for real
+                // Use fade out with duration to reduce flicker
                 using (BeginAbsoluteSequence(batch.First().StartTime - batch.First().TimePreempt))
                     this.FadeOut(100);
             }
