@@ -39,6 +39,14 @@ namespace osu.Game.Rulesets.Osu.Mods
         /// </summary>
         private const int min_alive_count = 10;
 
+        /// <summary>
+        /// Size of the buffer relative to the playfield. Anything outside the buffer boundary will be clipped.
+        /// </summary>
+        private const float buffer_size_multiplier = 1.2f;
+
+        private const double buffer_fade_out = 100;
+        private const double object_fade_in = 0;
+
         private readonly List<List<OsuHitObject>> batches = new List<List<OsuHitObject>> { new List<OsuHitObject>() };
 
         protected override void ApplyIncreasedVisibilityState(DrawableHitObject drawableObject, ArmedState state)
@@ -108,7 +116,7 @@ namespace osu.Game.Rulesets.Osu.Mods
         {
             foreach (var ho in batch)
             {
-                ho.TimeFadeIn = 0;
+                ho.TimeFadeIn = object_fade_in;
                 ho.TimePreempt = ho.StartTime - target.StartTime + target.TimePreempt;
 
                 synchronizeBatch(ho.NestedHitObjects.Cast<OsuHitObject>(), target);
@@ -186,7 +194,7 @@ namespace osu.Game.Rulesets.Osu.Mods
 
                 Alpha = 0;
                 RelativeSizeAxes = Axes.Both;
-                Size = new Vector2(1.2f, 1.2f);
+                Size = new Vector2(buffer_size_multiplier);
                 Origin = Anchor.Centre;
                 Anchor = Anchor.Centre;
                 RedrawOnScale = false;
@@ -197,13 +205,13 @@ namespace osu.Game.Rulesets.Osu.Mods
             {
                 // Seek to a time when the hit objects are visible
                 var stopwatchClock = new StopwatchClock();
-                stopwatchClock.Seek(batch.First().StartTime);
+                stopwatchClock.Seek(batch.First().StartTime - batch.First().TimePreempt + object_fade_in);
                 var clock = new FramedOffsetClock(stopwatchClock, false);
 
                 var container = new Container
                 {
                     RelativeSizeAxes = Axes.Both,
-                    Size = new Vector2(1 / 1.2f, 1 / 1.2f),
+                    Size = new Vector2(1 / buffer_size_multiplier),
                     Origin = Anchor.Centre,
                     Anchor = Anchor.Centre
                 };
@@ -223,12 +231,12 @@ namespace osu.Game.Rulesets.Osu.Mods
                 base.LoadComplete();
                 // Fade in at the start of the map
                 using (BeginAbsoluteSequence(firstObjectTime))
-                    this.FadeInFromZero(100);
+                    this.FadeInFromZero(object_fade_in);
 
                 // Fade out when the corresponding batch of hit objects are displayed for real
                 // Use fade out with duration to reduce flicker
                 using (BeginAbsoluteSequence(batch.First().StartTime - batch.First().TimePreempt))
-                    this.FadeOut(100);
+                    this.FadeOut(buffer_fade_out);
             }
 
             // todo: very dirty hack to dispose the dummy DHOs after they've been rendered
