@@ -29,6 +29,23 @@ namespace osu.Game.Rulesets.Osu.Mods
 
         public override string Acronym => "PU";
 
+        /*
+         * How this implementation works:
+         *
+         * - All hit objects in a map are grouped into batches of `batch_size`.
+         * - HOs in the same batch are shown at the same time, which is when most HOs in the last batch expire,
+         *   or at (StartTime - TimePreempt) of the first HO for the first batch.
+         *       * This is done by adjusting the TimePreempt of each HO in ApplyToBeatmap.
+         * - Each batch (except the first one) is also rendered to a framebuffer, which is shown on screen before
+         *   that batch of HOs actually becomes visible.
+         *       * This is done by creating a dummy DHO for each HO in the batch, then adding them to a BufferedContainer.
+         * - Transforms are applied to the BufferedContainers so that they are hidden right as the corresponding
+         *   batch of HOs are shown.
+         *
+         * As a result, there are no more than `batch_size + min_alive_count` number of HOs on screen at any time, but all future
+         *   HOs still remain visible via framebuffers.
+         */
+
         /// <summary>
         /// The number of hit objects to be grouped together in a framebuffer.
         /// </summary>
