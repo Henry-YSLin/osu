@@ -1,13 +1,16 @@
 // Copyright (c) ppy Pty Ltd <contact@ppy.sh>. Licensed under the MIT Licence.
 // See the LICENCE file in the repository root for full licence text.
 
+using System;
 using System.Linq;
 using osu.Framework.Audio;
+using osu.Framework.Audio.Mixing;
 using osu.Framework.Audio.Track;
 using osu.Framework.Bindables;
 using osu.Framework.Graphics;
 using osu.Framework.Graphics.Sprites;
 using osu.Framework.Localisation;
+using osu.Game.Audio.Effects;
 using osu.Game.Configuration;
 using osu.Game.Graphics.UserInterface;
 using osu.Game.Overlays.Settings;
@@ -35,6 +38,7 @@ namespace osu.Game.Rulesets.Mods
         private readonly BindableNumber<double> metronomeVolumeAdjust = new BindableDouble(0.5);
 
         private BindableNumber<int> currentCombo;
+        private AudioFilter lowPassFilter;
 
         [SettingSource("Enable metronome", "Add a metronome beat to help you keep track of the rhythm.")]
         public BindableBool EnableMetronome { get; } = new BindableBool
@@ -69,11 +73,16 @@ namespace osu.Game.Rulesets.Mods
         protected ModMuted()
         {
             InverseMuting.BindValueChanged(i => MuteComboCount.MinValue = i.NewValue ? 1 : 0, true);
+            mainVolumeAdjust.BindValueChanged(i =>
+            {
+                if (lowPassFilter != null)
+                    lowPassFilter.Cutoff = (int)(Math.Pow(i.NewValue, 3) * AudioFilter.MAX_LOWPASS_CUTOFF);
+            });
         }
 
-        public void ApplyToTrack(ITrack track)
+        public void ApplyToTrack(ITrack track, IAudioMixer mixer)
         {
-            track.AddAdjustment(AdjustableProperty.Volume, mainVolumeAdjust);
+            lowPassFilter = new AudioFilter(mixer) { Cutoff = 1000 };
         }
 
         public void ApplyToDrawableRuleset(DrawableRuleset<TObject> drawableRuleset)
