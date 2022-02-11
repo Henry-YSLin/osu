@@ -101,6 +101,9 @@ namespace osu.Game.Screens.Play
         private MusicController musicController { get; set; }
 
         [Resolved]
+        private AudioManager audioManager { get; set; }
+
+        [Resolved]
         private SpectatorClient spectatorClient { get; set; }
 
         public GameplayState GameplayState { get; private set; }
@@ -959,7 +962,7 @@ namespace osu.Game.Screens.Play
             // Todo: In the future, player will receive in a track and will probably not have to worry about this...
             musicController.ResetTrackAdjustments();
             foreach (var mod in GameplayState.Mods.OfType<IApplicableToTrack>())
-                mod.ApplyToTrack(musicController.CurrentTrack, musicController.TrackMixer);
+                mod.ApplyToTrack(musicController.CurrentTrack, audioManager.TrackMixer);
 
             updateGameplayState();
 
