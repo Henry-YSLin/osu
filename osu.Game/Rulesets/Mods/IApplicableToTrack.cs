@@ -1,6 +1,7 @@
 ﻿// Copyright (c) ppy Pty Ltd <contact@ppy.sh>. Licensed under the MIT Licence.
 // See the LICENCE file in the repository root for full licence text.
 
+using osu.Framework.Audio.Mixing;
 using osu.Framework.Audio.Track;
 
 namespace osu.Game.Rulesets.Mods
@@ -10,6 +11,6 @@ namespace osu.Game.Rulesets.Mods
     /// </summary>
     public interface IApplicableToTrack : IApplicableMod
     {
-        void ApplyToTrack(ITrack track);
+        void ApplyToTrack(ITrack track, IAudioMixer mixer);
     }
 }

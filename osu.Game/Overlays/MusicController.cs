@@ -408,9 +408,7 @@ namespace osu.Game.Overlays
             if (allowTrackAdjustments)
             {
                 foreach (var mod in mods.Value.OfType<IApplicableToTrack>())
-                    mod.ApplyToTrack(CurrentTrack);
-                foreach (var mod in mods.Value.OfType<IApplicableToTrackMixer>())
-                    mod.ApplyToTrackMixer(trackMixer);
+                    mod.ApplyToTrack(CurrentTrack, trackMixer);
             }
         }
     }

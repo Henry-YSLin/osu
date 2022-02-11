@@ -2,6 +2,7 @@
 // See the LICENCE file in the repository root for full licence text.
 
 using NUnit.Framework;
+using osu.Framework.Audio.Mixing;
 using osu.Framework.Audio.Track;
 using osu.Game.Beatmaps;
 using osu.Game.Rulesets.Mods;
@@ -34,7 +35,7 @@ namespace osu.Game.Tests.Rulesets.Mods
             var beatmap = createSingleSpinnerBeatmap();
             var mod = new ModWindUp();
             mod.ApplyToBeatmap(beatmap);
-            mod.ApplyToTrack(track);
+            mod.ApplyToTrack(track, new AudioMixerVirtual());
 
             seekTrackAndUpdateMod(mod, time);
 
@@ -55,7 +56,7 @@ namespace osu.Game.Tests.Rulesets.Mods
                 FinalRate = { Value = 0.5 }
             };
             mod.ApplyToBeatmap(beatmap);
-            mod.ApplyToTrack(track);
+            mod.ApplyToTrack(track, new AudioMixerVirtual());
 
             seekTrackAndUpdateMod(mod, time);
 
@@ -70,7 +71,7 @@ namespace osu.Game.Tests.Rulesets.Mods
             var beatmap = createSingleObjectBeatmap();
             var mod = new ModWindUp();
             mod.ApplyToBeatmap(beatmap);
-            mod.ApplyToTrack(track);
+            mod.ApplyToTrack(track, new AudioMixerVirtual());
 
             seekTrackAndUpdateMod(mod, time);
 

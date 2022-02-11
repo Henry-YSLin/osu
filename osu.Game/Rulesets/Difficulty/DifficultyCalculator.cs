@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using JetBrains.Annotations;
+using osu.Framework.Audio.Mixing;
 using osu.Framework.Audio.Track;
 using osu.Framework.Extensions.IEnumerableExtensions;
 using osu.Game.Beatmaps;
@@ -152,7 +153,8 @@ namespace osu.Game.Rulesets.Difficulty
                 : beatmap.GetPlayableBeatmap(ruleset, playableMods, cancellationToken);
 
             var track = new TrackVirtual(10000);
-            playableMods.OfType<IApplicableToTrack>().ForEach(m => m.ApplyToTrack(track));
+            var mixer = new AudioMixerVirtual();
+            playableMods.OfType<IApplicableToTrack>().ForEach(m => m.ApplyToTrack(track, mixer));
             clockRate = track.Rate;
         }
 

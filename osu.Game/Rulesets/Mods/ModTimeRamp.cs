@@ -4,6 +4,7 @@
 using System;
 using System.Linq;
 using osu.Framework.Audio;
+using osu.Framework.Audio.Mixing;
 using osu.Framework.Audio.Track;
 using osu.Framework.Bindables;
 using osu.Framework.Graphics.Audio;
@@ -53,7 +54,7 @@ namespace osu.Game.Rulesets.Mods
             AdjustPitch.BindValueChanged(applyPitchAdjustment);
         }
 
-        public void ApplyToTrack(ITrack track)
+        public void ApplyToTrack(ITrack track, IAudioMixer mixer)
         {
             this.track = track;
 

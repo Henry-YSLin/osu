@@ -3,6 +3,7 @@
 
 using System;
 using System.Linq;
+using osu.Framework.Audio.Mixing;
 using osu.Framework.Audio.Track;
 using osu.Framework.Extensions.IEnumerableExtensions;
 using osu.Game.Rulesets.Mods;
@@ -32,7 +33,8 @@ namespace osu.Game.Rulesets.Difficulty
         protected virtual void ApplyMods(Mod[] mods)
         {
             var track = new TrackVirtual(10000);
-            mods.OfType<IApplicableToTrack>().ForEach(m => m.ApplyToTrack(track));
+            var mixer = new AudioMixerVirtual();
+            mods.OfType<IApplicableToTrack>().ForEach(m => m.ApplyToTrack(track, mixer));
             TimeRate = track.Rate;
         }
 

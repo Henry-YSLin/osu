@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using osu.Framework.Allocation;
+using osu.Framework.Audio.Mixing;
 using osu.Framework.Audio.Track;
 using osu.Framework.Bindables;
 using osu.Framework.Extensions.IEnumerableExtensions;
@@ -81,8 +82,9 @@ namespace osu.Game.Rulesets.Mania.UI
         [BackgroundDependencyLoader]
         private void load()
         {
+            var virtualMixer = new AudioMixerVirtual();
             foreach (var mod in Mods.OfType<IApplicableToTrack>())
-                mod.ApplyToTrack(speedAdjustmentTrack);
+                mod.ApplyToTrack(speedAdjustmentTrack, virtualMixer);
 
             bool isForCurrentRuleset = Beatmap.BeatmapInfo.Ruleset.Equals(Ruleset.RulesetInfo);
 
