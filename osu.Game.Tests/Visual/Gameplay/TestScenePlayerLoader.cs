@@ -41,9 +41,6 @@ namespace osu.Game.Tests.Visual.Gameplay
         private AudioManager audioManager { get; set; }
 
         [Resolved]
-        private MusicController musicController { get; set; }
-
-        [Resolved]
         private SessionStatics sessionStatics { get; set; }
 
         [Cached]
@@ -103,7 +100,7 @@ namespace osu.Game.Tests.Visual.Gameplay
             Beatmap.Value = workingBeatmap;
 
             foreach (var mod in SelectedMods.Value.OfType<IApplicableToTrack>())
-                mod.ApplyToTrack(Beatmap.Value.Track, musicController.TrackMixer);
+                mod.ApplyToTrack(Beatmap.Value.Track, audioManager.TrackMixer);
         }
 
         [Test]
