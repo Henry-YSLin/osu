@@ -47,10 +47,9 @@ namespace osu.Game.Rulesets.Osu.Utils
                     DistanceFromPrevious = relativePosition.Length
                 });
 
-                if (hitObject is Slider)
+                if (hitObject is Slider slider)
                 {
-                    var endPositionVector = hitObject.EndPosition - hitObject.Position;
-                    float absoluteRotation = (float)Math.Atan2(endPositionVector.Y, endPositionVector.X);
+                    float absoluteRotation = getSliderRotation(slider);
                     positionInfo.Rotation = absoluteRotation - absoluteAngle;
                     absoluteAngle = absoluteRotation;
                 }
@@ -161,8 +160,10 @@ namespace osu.Game.Rulesets.Osu.Utils
             if (!(current.HitObject is Slider slider))
                 return;
 
+            absoluteAngle = (float)Math.Atan2(posRelativeToPrev.Y, posRelativeToPrev.X);
+
             Vector2 centreOfMassOriginal = calculateCentreOfMass(slider);
-            Vector2 centreOfMassModified = rotateVector(centreOfMassOriginal, current.Rotation - current.RotationOriginal);
+            Vector2 centreOfMassModified = rotateVector(centreOfMassOriginal, current.Rotation + absoluteAngle - getSliderRotation(slider));
             centreOfMassModified = RotateAwayFromEdge(current.PositionModified, centreOfMassModified);
 
             float relativeRotation = (float)Math.Atan2(centreOfMassModified.Y, centreOfMassModified.X) - (float)Math.Atan2(centreOfMassOriginal.Y, centreOfMassOriginal.X);
@@ -378,24 +379,15 @@ namespace osu.Game.Rulesets.Osu.Utils
             public Vector2 PositionOriginal { get; }
             public Vector2 PositionModified { get; set; }
             public Vector2 EndPositionModified { get; set; }
-            public float RotationOriginal { get; }
 
             public ObjectPositionInfoInternal(ObjectPositionInfo original)
                 : base(original.HitObject)
             {
                 RelativeAngle = original.RelativeAngle;
                 DistanceFromPrevious = original.DistanceFromPrevious;
+                Rotation = original.Rotation;
                 PositionModified = PositionOriginal = HitObject.Position;
                 EndPositionModified = HitObject.EndPosition;
-
-                if (original.HitObject is Slider slider)
-                {
-                    RotationOriginal = getSliderRotation(slider);
-                }
-                else
-                {
-                    RotationOriginal = 0;
-                }
             }
         }
     }
