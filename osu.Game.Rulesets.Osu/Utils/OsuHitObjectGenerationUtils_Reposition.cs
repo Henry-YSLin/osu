@@ -236,6 +236,11 @@ namespace osu.Game.Rulesets.Osu.Utils
             }
         }
 
+        /// <summary>
+        /// Calculate the centre of mass of a slider relative to its start position.
+        /// </summary>
+        /// <param name="slider">The slider to process.</param>
+        /// <returns>The centre of mass of the slider.</returns>
         private static Vector2 calculateCentreOfMass(Slider slider)
         {
             if (slider.Distance < 1) return Vector2.Zero;
@@ -332,6 +337,11 @@ namespace osu.Game.Rulesets.Osu.Utils
             );
         }
 
+        /// <summary>
+        /// Get the absolute rotation of a slider, defined as the angle from its start position to its end position.
+        /// </summary>
+        /// <param name="slider">The slider to process.</param>
+        /// <returns>The angle in radians.</returns>
         private static float getSliderRotation(Slider slider)
         {
             var endPositionVector = slider.EndPosition - slider.Position;
