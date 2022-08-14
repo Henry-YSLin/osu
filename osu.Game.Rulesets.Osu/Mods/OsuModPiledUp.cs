@@ -87,7 +87,7 @@ namespace osu.Game.Rulesets.Osu.Mods
             // Disable slider snaking
             if (drawableObject is DrawableSlider slider)
             {
-                SnakingSliderBody sliderBody = slider.SliderBody;
+                SnakingSliderBody? sliderBody = slider.SliderBody;
 
                 if (sliderBody == null)
                     return;
@@ -162,7 +162,7 @@ namespace osu.Game.Rulesets.Osu.Mods
         /// </summary>
         /// <param name="hitObject">A hit object.</param>
         /// <returns>A drawable representation of the hit object, with additional effects applied.</returns>
-        private static DrawableOsuHitObject createDrawableRepresentation(OsuHitObject hitObject)
+        private static DrawableOsuHitObject? createDrawableRepresentation(OsuHitObject hitObject)
         {
             DrawableOsuHitObject drawable;
 
@@ -193,7 +193,7 @@ namespace osu.Game.Rulesets.Osu.Mods
         /// <summary>
         /// Render a batch of hit objects to a framebuffer, so that these objects can be visible without being present.
         /// </summary>
-        private sealed class BufferedHitObjectsContainer : BufferedContainer
+        private sealed class BufferedHitObjectsContainer : CachedBufferContainer
         {
             private readonly List<OsuHitObject> batch;
             private readonly double firstObjectTime;
@@ -204,7 +204,7 @@ namespace osu.Game.Rulesets.Osu.Mods
             /// <param name="batch">The batch of hit objects to be rendered.</param>
             /// <param name="firstObjectTime">The time when the first hit object in the beatmap becomes visible. Used to fade in this container.</param>
             public BufferedHitObjectsContainer(List<OsuHitObject> batch, double firstObjectTime)
-                : base(cachedFrameBuffer: true)
+                : base(pixelSnapping: true)
             {
                 this.batch = batch;
                 this.firstObjectTime = firstObjectTime;
@@ -214,7 +214,6 @@ namespace osu.Game.Rulesets.Osu.Mods
                 Size = new Vector2(buffer_size_multiplier);
                 Origin = Anchor.Centre;
                 Anchor = Anchor.Centre;
-                RedrawOnScale = false;
             }
 
             [BackgroundDependencyLoader]
@@ -236,6 +235,10 @@ namespace osu.Game.Rulesets.Osu.Mods
                 for (int j = batch.Count - 1; j >= 0; j--)
                 {
                     var drawable = createDrawableRepresentation(batch[j]);
+
+                    if (drawable == null)
+                        continue;
+
                     drawable.Clock = clock;
                     container.Add(drawable);
                 }
@@ -254,17 +257,6 @@ namespace osu.Game.Rulesets.Osu.Mods
                 // Use fade out with duration to reduce flicker
                 using (BeginAbsoluteSequence(batch.First().StartTime - batch.First().TimePreempt))
                     this.FadeOut(buffer_fade_out);
-            }
-
-            // todo: very dirty hack to dispose the dummy DHOs after they've been rendered
-            private int frames;
-
-            protected override void Update()
-            {
-                base.Update();
-                frames++;
-                if (frames > 10)
-                    Clear();
             }
         }
     }
