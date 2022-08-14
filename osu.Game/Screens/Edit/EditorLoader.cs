@@ -1,9 +1,12 @@
 // Copyright (c) ppy Pty Ltd <contact@ppy.sh>. Licensed under the MIT Licence.
 // See the LICENCE file in the repository root for full licence text.
 
+#nullable disable
+
 using System;
 using JetBrains.Annotations;
 using osu.Framework.Allocation;
+using osu.Framework.Extensions.ObjectExtensions;
 using osu.Framework.Graphics;
 using osu.Framework.Graphics.Containers;
 using osu.Framework.Logging;
@@ -62,6 +65,8 @@ namespace osu.Game.Screens.Edit
             base.LoadComplete();
 
             // will be restored via lease, see `DisallowExternalBeatmapRulesetChanges`.
+            if (!(Beatmap.Value is DummyWorkingBeatmap))
+                Ruleset.Value = Beatmap.Value.BeatmapInfo.Ruleset;
             Mods.Value = Array.Empty<Mod>();
         }
 
@@ -80,12 +85,18 @@ namespace osu.Game.Screens.Edit
             }
         }
 
-        public void ScheduleSwitchToNewDifficulty(BeatmapSetInfo beatmapSetInfo, RulesetInfo rulesetInfo, EditorState editorState)
+        public void ScheduleSwitchToNewDifficulty(BeatmapInfo referenceBeatmapInfo, RulesetInfo rulesetInfo, bool createCopy, EditorState editorState)
             => scheduleDifficultySwitch(() =>
             {
                 try
                 {
-                    return beatmapManager.CreateNewBlankDifficulty(beatmapSetInfo, rulesetInfo);
+                    // fetch a fresh detached reference from database to avoid polluting model instances attached to cached working beatmaps.
+                    var targetBeatmapSet = beatmapManager.QueryBeatmap(b => b.ID == referenceBeatmapInfo.ID).AsNonNull().BeatmapSet.AsNonNull();
+                    var referenceWorkingBeatmap = beatmapManager.GetWorkingBeatmap(referenceBeatmapInfo);
+
+                    return createCopy
+                        ? beatmapManager.CopyExistingDifficulty(targetBeatmapSet, referenceWorkingBeatmap)
+                        : beatmapManager.CreateNewDifficulty(targetBeatmapSet, referenceWorkingBeatmap, rulesetInfo);
                 }
                 catch (Exception ex)
                 {

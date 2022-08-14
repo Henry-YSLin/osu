@@ -1,6 +1,8 @@
 ﻿// Copyright (c) ppy Pty Ltd <contact@ppy.sh>. Licensed under the MIT Licence.
 // See the LICENCE file in the repository root for full licence text.
 
+#nullable disable
+
 using osu.Game.Beatmaps;
 using osu.Game.Graphics;
 using osu.Game.Rulesets.Mods;
@@ -118,19 +120,19 @@ namespace osu.Game.Rulesets.Osu
             {
                 switch (mod)
                 {
-                    case OsuModAutopilot _:
+                    case OsuModAutopilot:
                         value |= LegacyMods.Autopilot;
                         break;
 
-                    case OsuModSpunOut _:
+                    case OsuModSpunOut:
                         value |= LegacyMods.SpunOut;
                         break;
 
-                    case OsuModTarget _:
+                    case OsuModTarget:
                         value |= LegacyMods.Target;
                         break;
 
-                    case OsuModTouchDevice _:
+                    case OsuModTouchDevice:
                         value |= LegacyMods.TouchDevice;
                         break;
                 }
@@ -159,6 +161,7 @@ namespace osu.Game.Rulesets.Osu
                         new MultiMod(new OsuModDoubleTime(), new OsuModNightcore()),
                         new OsuModHidden(),
                         new MultiMod(new OsuModFlashlight(), new OsuModBlinds()),
+                        new OsuModStrictTracking()
                     };
 
                 case ModType.Conversion:
@@ -169,7 +172,7 @@ namespace osu.Game.Rulesets.Osu
                         new OsuModClassic(),
                         new OsuModRandom(),
                         new OsuModMirror(),
-                        new OsuModAlternate(),
+                        new MultiMod(new OsuModAlternate(), new OsuModSingleTap())
                     };
 
                 case ModType.Automation:
@@ -194,7 +197,8 @@ namespace osu.Game.Rulesets.Osu
                         new OsuModApproachDifferent(),
                         new OsuModMuted(),
                         new OsuModNoScope(),
-                        new OsuModAimAssist(),
+                        new MultiMod(new OsuModMagnetised(), new OsuModRepel()),
+                        new ModAdaptiveSpeed(),
                         new OsuModPiledUp()
                     };
 
@@ -213,7 +217,7 @@ namespace osu.Game.Rulesets.Osu
 
         public override DifficultyCalculator CreateDifficultyCalculator(IWorkingBeatmap beatmap) => new OsuDifficultyCalculator(RulesetInfo, beatmap);
 
-        public override PerformanceCalculator CreatePerformanceCalculator(DifficultyAttributes attributes, ScoreInfo score) => new OsuPerformanceCalculator(this, attributes, score);
+        public override PerformanceCalculator CreatePerformanceCalculator() => new OsuPerformanceCalculator();
 
         public override HitObjectComposer CreateHitObjectComposer() => new OsuHitObjectComposer(this);
 
@@ -280,6 +284,17 @@ namespace osu.Game.Rulesets.Osu
                 {
                     Columns = new[]
                     {
+                        new StatisticItem("Performance Breakdown", () => new PerformanceBreakdownChart(score, playableBeatmap)
+                        {
+                            RelativeSizeAxes = Axes.X,
+                            AutoSizeAxes = Axes.Y
+                        }),
+                    }
+                },
+                new StatisticRow
+                {
+                    Columns = new[]
+                    {
                         new StatisticItem("Timing Distribution", () => new HitEventTimingDistributionGraph(timedHitEvents)
                         {
                             RelativeSizeAxes = Axes.X,
@@ -304,6 +319,7 @@ namespace osu.Game.Rulesets.Osu
                     {
                         new StatisticItem(string.Empty, () => new SimpleStatisticTable(3, new SimpleStatisticItem[]
                         {
+                            new AverageHitError(timedHitEvents),
                             new UnstableRate(timedHitEvents)
                         }), true)
                     }

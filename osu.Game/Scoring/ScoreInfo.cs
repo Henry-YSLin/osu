@@ -20,8 +20,6 @@ using osu.Game.Users;
 using osu.Game.Utils;
 using Realms;
 
-#nullable enable
-
 namespace osu.Game.Scoring
 {
     [ExcludeFromDynamicCompile]
@@ -47,7 +45,7 @@ namespace osu.Game.Scoring
 
         public double Accuracy { get; set; }
 
-        public bool HasReplay { get; set; }
+        public bool HasReplay => !string.IsNullOrEmpty(Hash);
 
         public DateTimeOffset Date { get; set; }
 
@@ -157,7 +155,7 @@ namespace osu.Game.Scoring
         public LocalisableString DisplayAccuracy => Accuracy.FormatAccuracy();
 
         /// <summary>
-        /// Whether this <see cref="EFScoreInfo"/> represents a legacy (osu!stable) score.
+        /// Whether this <see cref="ScoreInfo"/> represents a legacy (osu!stable) score.
         /// </summary>
         [Ignored]
         public bool IsLegacyScore => Mods.OfType<ModClassic>().Any();

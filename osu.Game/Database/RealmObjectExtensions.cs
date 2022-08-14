@@ -14,15 +14,13 @@ using osu.Game.Rulesets;
 using osu.Game.Scoring;
 using Realms;
 
-#nullable enable
-
 namespace osu.Game.Database
 {
     public static class RealmObjectExtensions
     {
         private static readonly IMapper write_mapper = new MapperConfiguration(c =>
         {
-            c.ShouldMapField = fi => false;
+            c.ShouldMapField = _ => false;
             c.ShouldMapProperty = pi => pi.SetMethod?.IsPublic == true;
 
             c.CreateMap<BeatmapMetadata, BeatmapMetadata>()
@@ -38,6 +36,7 @@ namespace osu.Game.Database
             c.CreateMap<BeatmapInfo, BeatmapInfo>()
              .ForMember(s => s.Ruleset, cc => cc.Ignore())
              .ForMember(s => s.Metadata, cc => cc.Ignore())
+             .ForMember(s => s.UserSettings, cc => cc.Ignore())
              .ForMember(s => s.Difficulty, cc => cc.Ignore())
              .ForMember(s => s.BeatmapSet, cc => cc.Ignore())
              .AfterMap((s, d) =>
@@ -71,7 +70,7 @@ namespace osu.Game.Database
                  }
              });
 
-            c.Internal().ForAllMaps((typeMap, expression) =>
+            c.Internal().ForAllMaps((_, expression) =>
             {
                 expression.ForAllMembers(m =>
                 {
@@ -88,7 +87,7 @@ namespace osu.Game.Database
             c.CreateMap<BeatmapSetInfo, BeatmapSetInfo>()
              .ConstructUsing(_ => new BeatmapSetInfo(null))
              .MaxDepth(2)
-             .AfterMap((s, d) =>
+             .AfterMap((_, d) =>
              {
                  foreach (var beatmap in d.Beatmaps)
                      beatmap.BeatmapSet = d;
@@ -98,7 +97,7 @@ namespace osu.Game.Database
             // Only hasn't been done yet as we detach at the point of BeatmapInfo less often.
             c.CreateMap<BeatmapInfo, BeatmapInfo>()
              .MaxDepth(2)
-             .AfterMap((s, d) =>
+             .AfterMap((_, d) =>
              {
                  for (int i = 0; i < d.BeatmapSet?.Beatmaps.Count; i++)
                  {
@@ -122,7 +121,7 @@ namespace osu.Game.Database
              .ConstructUsing(_ => new BeatmapSetInfo(null))
              .MaxDepth(2)
              .ForMember(b => b.Files, cc => cc.Ignore())
-             .AfterMap((s, d) =>
+             .AfterMap((_, d) =>
              {
                  foreach (var beatmap in d.Beatmaps)
                      beatmap.BeatmapSet = d;
@@ -136,14 +135,14 @@ namespace osu.Game.Database
 
         private static void applyCommonConfiguration(IMapperConfigurationExpression c)
         {
-            c.ShouldMapField = fi => false;
+            c.ShouldMapField = _ => false;
 
             // This is specifically to avoid mapping explicit interface implementations.
             // If we want to limit this further, we can avoid mapping properties with no setter that are not IList<>.
             // Takes a bit of effort to determine whether this is the case though, see https://stackoverflow.com/questions/951536/how-do-i-tell-whether-a-type-implements-ilist
             c.ShouldMapProperty = pi => pi.GetMethod?.IsPublic == true;
 
-            c.Internal().ForAllMaps((typeMap, expression) =>
+            c.Internal().ForAllMaps((_, expression) =>
             {
                 expression.ForAllMembers(m =>
                 {
@@ -154,6 +153,7 @@ namespace osu.Game.Database
 
             c.CreateMap<RealmKeyBinding, RealmKeyBinding>();
             c.CreateMap<BeatmapMetadata, BeatmapMetadata>();
+            c.CreateMap<BeatmapUserSettings, BeatmapUserSettings>();
             c.CreateMap<BeatmapDifficulty, BeatmapDifficulty>();
             c.CreateMap<RulesetInfo, RulesetInfo>();
             c.CreateMap<ScoreInfo, ScoreInfo>();

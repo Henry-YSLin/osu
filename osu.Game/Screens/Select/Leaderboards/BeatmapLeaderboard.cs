@@ -1,8 +1,11 @@
 // Copyright (c) ppy Pty Ltd <contact@ppy.sh>. Licensed under the MIT Licence.
 // See the LICENCE file in the repository root for full licence text.
 
+#nullable disable
+
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -11,6 +14,7 @@ using osu.Framework.Bindables;
 using osu.Framework.Extensions;
 using osu.Game.Beatmaps;
 using osu.Game.Database;
+using osu.Game.Extensions;
 using osu.Game.Online.API;
 using osu.Game.Online.API.Requests;
 using osu.Game.Online.Leaderboards;
@@ -98,6 +102,7 @@ namespace osu.Game.Screens.Select.Leaderboards
         protected override APIRequest FetchScores(CancellationToken cancellationToken)
         {
             var fetchBeatmapInfo = BeatmapInfo;
+            var fetchRuleset = ruleset.Value ?? fetchBeatmapInfo.Ruleset;
 
             if (fetchBeatmapInfo == null)
             {
@@ -107,7 +112,7 @@ namespace osu.Game.Screens.Select.Leaderboards
 
             if (Scope == BeatmapLeaderboardScope.Local)
             {
-                subscribeToLocalScores(cancellationToken);
+                subscribeToLocalScores(fetchBeatmapInfo, cancellationToken);
                 return null;
             }
 
@@ -117,9 +122,15 @@ namespace osu.Game.Screens.Select.Leaderboards
                 return null;
             }
 
+            if (!fetchRuleset.IsLegacyRuleset())
+            {
+                SetErrorState(LeaderboardState.RulesetUnavailable);
+                return null;
+            }
+
             if (fetchBeatmapInfo.OnlineID <= 0 || fetchBeatmapInfo.Status <= BeatmapOnlineStatus.Pending)
             {
-                SetErrorState(LeaderboardState.Unavailable);
+                SetErrorState(LeaderboardState.BeatmapUnavailable);
                 return null;
             }
 
@@ -137,11 +148,11 @@ namespace osu.Game.Screens.Select.Leaderboards
             else if (filterMods)
                 requestMods = mods.Value;
 
-            var req = new GetScoresRequest(fetchBeatmapInfo, ruleset.Value ?? fetchBeatmapInfo.Ruleset, Scope, requestMods);
+            var req = new GetScoresRequest(fetchBeatmapInfo, fetchRuleset, Scope, requestMods);
 
             req.Success += r =>
             {
-                scoreManager.OrderByTotalScoreAsync(r.Scores.Select(s => s.CreateScoreInfo(rulesets, fetchBeatmapInfo)).ToArray(), cancellationToken)
+                scoreManager.OrderByTotalScoreAsync(r.Scores.Select(s => s.ToScoreInfo(rulesets, fetchBeatmapInfo)).ToArray(), cancellationToken)
                             .ContinueWith(task => Schedule(() =>
                             {
                                 if (cancellationToken.IsCancellationRequested)
@@ -164,13 +175,12 @@ namespace osu.Game.Screens.Select.Leaderboards
             Action = () => ScoreSelected?.Invoke(model)
         };
 
-        private void subscribeToLocalScores(CancellationToken cancellationToken)
+        private void subscribeToLocalScores(BeatmapInfo beatmapInfo, CancellationToken cancellationToken)
         {
+            Debug.Assert(beatmapInfo != null);
+
             scoreSubscription?.Dispose();
             scoreSubscription = null;
-
-            if (beatmapInfo == null)
-                return;
 
             scoreSubscription = realm.RegisterForNotifications(r =>
                 r.All<ScoreInfo>().Filter($"{nameof(ScoreInfo.BeatmapInfo)}.{nameof(BeatmapInfo.ID)} == $0"
@@ -181,6 +191,11 @@ namespace osu.Game.Screens.Select.Leaderboards
             void localScoresChanged(IRealmCollection<ScoreInfo> sender, ChangeSet changes, Exception exception)
             {
                 if (cancellationToken.IsCancellationRequested)
+                    return;
+
+                // This subscription may fire from changes to linked beatmaps, which we don't care about.
+                // It's currently not possible for a score to be modified after insertion, so we can safely ignore callbacks with only modifications.
+                if (changes?.HasCollectionChanges() == false)
                     return;
 
                 var scores = sender.AsEnumerable();

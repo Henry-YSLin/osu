@@ -1,6 +1,8 @@
 // Copyright (c) ppy Pty Ltd <contact@ppy.sh>. Licensed under the MIT Licence.
 // See the LICENCE file in the repository root for full licence text.
 
+#nullable disable
+
 using System;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Diagnostics.CodeAnalysis;
@@ -11,7 +13,7 @@ namespace osu.Game.Rulesets
 {
     [ExcludeFromDynamicCompile]
     [Table(@"RulesetInfo")]
-    public sealed class EFRulesetInfo : IEquatable<EFRulesetInfo>, IRulesetInfo
+    public sealed class EFRulesetInfo : IEquatable<EFRulesetInfo>, IComparable<EFRulesetInfo>, IRulesetInfo
     {
         public int? ID { get; set; }
 
@@ -42,7 +44,15 @@ namespace osu.Game.Rulesets
 
         public bool Equals(EFRulesetInfo other) => other != null && ID == other.ID && Available == other.Available && Name == other.Name && InstantiationInfo == other.InstantiationInfo;
 
-        public int CompareTo(RulesetInfo other) => OnlineID.CompareTo(other.OnlineID);
+        public int CompareTo(EFRulesetInfo other) => OnlineID.CompareTo(other.OnlineID);
+
+        public int CompareTo(IRulesetInfo other)
+        {
+            if (!(other is EFRulesetInfo ruleset))
+                throw new ArgumentException($@"Object is not of type {nameof(EFRulesetInfo)}.", nameof(other));
+
+            return CompareTo(ruleset);
+        }
 
         public override bool Equals(object obj) => obj is EFRulesetInfo rulesetInfo && Equals(rulesetInfo);
 
@@ -69,7 +79,7 @@ namespace osu.Game.Rulesets
         public int OnlineID
         {
             get => ID ?? -1;
-            set => ID = value >= 0 ? value : (int?)null;
+            set => ID = value >= 0 ? value : null;
         }
 
         #endregion
